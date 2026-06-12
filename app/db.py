@@ -16,9 +16,10 @@ def get_val(val_id: int, db_path: str | Path = DEFAULT_DB_PATH) -> dict[str, obj
     with connect(db_path) as conn:
         row = conn.execute(
             """
-            select id, handle, code
+            select vals.id, owner_profiles.display_name, vals.code
             from vals
-            where id = ?
+            join owner_profiles on owner_profiles.val_id = vals.id
+            where vals.id = ?
             """,
             (val_id,),
         ).fetchone()
@@ -28,6 +29,6 @@ def get_val(val_id: int, db_path: str | Path = DEFAULT_DB_PATH) -> dict[str, obj
 
     return {
         "id": row["id"],
-        "owner": row["handle"],
+        "owner": row["display_name"],
         "code": row["code"],
     }
