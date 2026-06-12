@@ -18,8 +18,12 @@ def reset_db(db_path: str | Path = DEFAULT_DB_PATH) -> None:
 def seed(db_path: str | Path) -> None:
     with sqlite3.connect(db_path) as conn:
         conn.execute(
-            "insert into vals (id, handle, code) values (?, ?, ?)",
-            (1, "sophie", "export const hello = 'world';"),
+            "insert into vals (id, code) values (?, ?)",
+            (1, "export const hello = 'world';"),
+        )
+        conn.execute(
+            "insert into owner_profiles (val_id, display_name) values (?, ?)",
+            (1, "sophie"),
         )
 
 
