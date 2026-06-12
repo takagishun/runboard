@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply migrations
+        env:
+          DATABASE_PATH: ${{ secrets.PRODUCTION_DATABASE_PATH }}
+        run: python scripts/migrate.py "$DATABASE_PATH"
+
+  deploy-app:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: migrate
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build
+        run: python -m py_compile app/*.py scripts/*.py
+
+      - name: Deploy
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+        run: curl --fail --request POST "$DEPLOY_HOOK_URL"
+
+      - name: Health check
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail "$APP_URL/health"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1

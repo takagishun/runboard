@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import sqlite3
 from pathlib import Path
 
@@ -35,4 +36,4 @@ def migrate(db_path: str | Path) -> None:
 
 
 if __name__ == "__main__":
-    migrate(".tmp/app.sqlite3")
+    migrate(sys.argv[1] if len(sys.argv) > 1 else ".tmp/app.sqlite3")
